@@ -108,7 +108,10 @@ function chat(reqMsgs) {
     }, (data) => {
         let msg = data.choices[0].delta || data.choices[0].message || {}
         assistantElem.className = 'assistant'
-        assistantElem.innerText += msg.content || ""
+        if (msg.content && msg.content !== '\n\n'){
+            assistantElem.innerText += msg.content
+            message_container.scrollTop = message_container.scrollHeight
+        }
     }, () => {
         let msg = assistantElem.innerText
         saveConv({role: "assistant", content: msg})

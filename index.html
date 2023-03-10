@@ -6,13 +6,13 @@
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-<!--    <link rel="manifest" href="favicon/site.webmanifest">-->
+    <!--    <link rel="manifest" href="favicon/site.webmanifest">-->
     <link rel="stylesheet" href="miniflux.css">
     <style>
         .modal {
             display: none;
             background: rgba(0, 0, 0, 0.30);
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -27,7 +27,7 @@
             max-height: 85vh;
             background-color: white;
             padding: 20px 30px;
-            margin: 20px;
+            /*margin: 20px;*/
             overflow: auto;
         }
 
@@ -62,14 +62,72 @@
         #message-box {
             margin: 0;
         }
+
+        .system,
+        .assistant,
+        .user {
+            max-width: 90%;
+            width: fit-content;
+            /*padding: 12px 18px;*/
+            padding: .5rem;
+            /*margin: 8px 0;*/
+            white-space: pre-wrap;
+        }
+
+        .system {
+            align-self: center;
+            color: #555;
+            font-size: 1.0rem;
+        }
+
+        .assistant {
+            background-color: white;
+            margin-left: 5%;
+            font-style: italic;
+            /*border-radius: 36px 8px 8px 0;*/
+            border-width: 1px;
+            border-style: dashed;
+            border-color: #111111;
+            font-size: 1rem;
+        }
+
+
+        .user {
+            font-size: 1.1rem;
+            font-weight: bold;
+            background-color: white;
+            color: #396;
+            /*border-radius: 8px 36px 0 8px;*/
+            /*align-self: end;*/
+            /*margin-left: auto;*/
+        }
+
+        .history-item {
+            max-width: calc(100% - 20px);
+            width: calc(100% - 20px);
+            padding: 12px 18px;
+            font-size: 1.0rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-item:nth-child(even) {
+            background-color: antiquewhite;
+        }
+
+        .history-item:nth-child(odd) {
+            background-color: aliceblue;
+        }
+
     </style>
 
 
 </head>
 
-<body style="height: 100%;">
+<body style="height: 100vh;">
 
-<div style="display: flex;flex-direction: column;height: 100%;">
+<div style="display: flex;flex-direction: column;height: 99%;max-height: 99%;">
     <header class="header">
         <nav style="display: flex;margin-top: 1rem">
             <div class="logo">
@@ -77,20 +135,20 @@
             </div>
             <ul style="margin-left: auto">
                 <li>
-                    <a href="/starred" data-page="starred">Starred</a>
+                    <a>New</a>
                 </li>
-                <li>
-                    <a href="/history" data-page="history">History</a>
+                <li onclick="open_history_modal()">
+                    <a>History</a>
                 </li>
                 <li onclick="open_setting_modal()">
-                    <a data-page="unread">设置</a>
+                    <a>Settings</a>
                 </li>
             </ul>
         </nav>
     </header>
-    <div style="flex: auto;margin: .5rem 0;">
+    <div style="flex:auto; margin: .5rem 0;max-height: 85%">
         <div id="message-container" class="item touch-item item-status-read"
-             style="height: 100%;display: flex;flex-direction: column">
+             style="height: 100%;display: flex;flex-direction: column;overflow: auto">
         </div>
     </div>
     <form style="margin-top: auto;margin-bottom: .5rem;display: flex;flex-direction: row;">
@@ -106,6 +164,7 @@
 
 <div id="setting" class="modal">
     <div class="modal-content">
+        <h2 style="display: inline-block">Settings</h2>
         <span class="close" onclick="close_setting_modal()">&times;</span>
         <form>
             <label for="domainInput">Domain</label>
@@ -124,8 +183,7 @@
             <input type="text" id="maxTokensInput"/>
 
             <label for="temperatureInput">Temperature</label>
-            <!--            <input type="text" id="temperatureInput"/>-->
-            <input type="range" id="temperatureInput"/>
+            <input type="range" max="2" value="0.5" step="0.1" id="temperatureInput"/>
             <label for="systemPromptInput">What is your assistant</label>
             <textarea id="systemPromptInput"></textarea>
             <label title="In a thread, each session is a new session (ctrl + ;)">
@@ -145,6 +203,17 @@
     </div>
 </div>
 
+<div id="history-modal" class="modal">
+    <div id="history" class="modal-content">
+        <span class="close" onclick="close_history_modal()">&times;</span>
+        <div style="display: flex; align-items: center;">
+            <h2 style="display: inline-block">History</h2>
+            <div style="flex: 1;"></div>
+
+        </div>
+        <div id="historyList"></div>
+    </div>
+</div>
 <script lang="javascript">
     window.dataLayer = window.dataLayer || [];
 
@@ -157,6 +226,7 @@
     gtag('config', 'G-RBJJWTTD37');
 
     const setting = document.getElementById("setting")
+    const history_modal = document.getElementById("history-modal")
     const message_box = document.getElementById("message-box")
     const message_container = document.getElementById("message-container")
     message_box.focus()
@@ -182,6 +252,14 @@
 
     function close_setting_modal() {
         setting.style.display = 'none'
+    }
+
+    function open_history_modal(){
+
+        history_modal.style.display = 'flex'
+    }
+    function close_history_modal(){
+        history_modal.style.display = 'none'
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sse.js@0.6.1/lib/sse.min.js"></script>

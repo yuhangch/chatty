@@ -1,4 +1,4 @@
-# chatgpt
+# chatty
 Build your own ChatGPT website.
 
 - 自定义 OpenAI 域名，直连，不经过他人服务器，无需担心 Key 泄露；
