@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+  <title>Chat GPT Simple</title>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      /*min-height: 100%;*/
+      /*max-width: 720px;*/
+      margin: auto;
+      padding: 0 8px;
+      display: flex;
+      flex-flow: column;
+    }
+
+    #input {
+      width: 100%;
+      display: flex;
+      align-items: end;
+      margin-bottom: 5px;
+    }
+
+    /*#input:focus-within {*/
+    /*  border-width: 2px;*/
+    /*}*/
+
+    #line {
+      flex-grow: 0;
+      padding: 8px 0 8px 8px;
+      outline: medium;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    /*input[type="submit"],*/
+    /*button.icon {*/
+    /*  padding: 4px 8px;*/
+    /*  color: green;*/
+    /*  border-radius: 8px;*/
+    /*  background: none;*/
+    /*  border: none;*/
+    /*  font-size: 1.5rem;*/
+    /*  cursor: pointer;*/
+    /*}*/
+
+    /* CSS LOADER */
+    .loader {
+      border: 6px solid #efefef;
+      border-top: 6px solid #111;
+      border-radius: 50%;
+      animation: spin 1.2s linear infinite;
+      margin: 4px auto;
+      width: 20px;
+      height: 20px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #box {
+      width: 100%;
+      flex-grow: 2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal {
+      background: rgba(0, 0, 0, 0.30);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .model-body {
+      width: 100%;
+      max-width: 720px;
+      max-height: 85vh;
+      background-color: white;
+      border-radius: 20px;
+      padding: 20px 30px;
+      margin: 20px;
+      overflow: auto;
+    }
+
+    .model-body input,
+    .model-body textarea {
+      width: calc(100% - 20px);
+      padding: 10px;
+      font-size: 1.0rem;
+      border-radius: 4px;
+      background: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .model-body label {
+      font-size: 1.2rem;
+    }
+
+    .model-body label.label {
+      display: block;
+      margin: 20px 0 5px 0;
+    }
+
+    .model-body button {
+      font-size: 1.1rem;
+      padding: 10px 30px;
+    }
+
+    .system,
+    .assistant,
+    .user {
+      max-width: 80%;
+      width: fit-content;
+      padding: 12px 18px;
+      margin: 8px 0;
+      font-size: 1.1rem;
+      white-space: pre-wrap;
+    }
+
+    .system {
+      align-self: center;
+      color: #555;
+      font-size: 1.0rem;
+    }
+
+    .assistant {
+      background-color: bisque;
+      border-radius: 36px 8px 8px 0;
+    }
+
+    .user {
+      background-color: darkcyan;
+      color: aliceblue;
+      border-radius: 8px 36px 0 8px;
+      align-self: end;
+      margin-left: auto;
+    }
+
+    .history-item {
+      max-width: calc(100% - 20px);
+      width: calc(100% - 20px);
+      padding: 12px 18px;
+      font-size: 1.0rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .history-item:nth-child(even) {
+      background-color: antiquewhite;
+    }
+
+    .history-item:nth-child(odd) {
+      background-color: aliceblue;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
+<div style="display: flex; align-items: center;">
+  <h2 style="display: inline-block;">CHATTY</h2>
+  <div style="flex: 1;"></div>
+  <input onclick="reset()" type="submit" title="New (ctrl + i)" value="新对话" />
+  <input onclick="showHistory(true)" type="submit" title="History (ctrl + h)" value="记录" />
+  <input onclick="showSettings(true)" type="submit" title="Setting (ctrl + ,)" value="设置" />
+</div>
+<div id="box"></div>
+<div id="input" style="flex-grow: 0;margin-top: auto">
+  <input id="line" type="text" contenteditable="true"/>
+  <div id="loader" class="loader" hidden></div>
+  <input  onclick="onSend()" type="submit" title="按 'ctrl+enter' 或 'alt+enter' 快捷键发送" value="▶" />
+</div>
+<!--<div style="text-align: right; font-size: 90%; margin-bottom: 4px;">ctrl(alt)+enter</div>-->
+<div id="settingsModal" class="modal" style="display: none;">
+  <div id="settings" class="model-body">
+    <div style="display: flex; align-items: center;">
+      <h2 style="display: inline-block">Setting</h2>
+      <div style="flex: 1;"></div>
+      <input  style="width: auto; font-size: 1.5rem;" onclick="showSettings(false)" type="submit" title="Close (Esc)"
+        value="☕" />
+    </div>
+    <label class="label">Domain</label>
+    <input type="text" id="domainInput" />
+    <label class="label">API Key <span style="color: red">*</span></label>
+    <input placeholder='OpenAI API Key' type="text" id="apiKeyInput" />
+    <label class="label">Model <span style="color: red">*</span></label>
+    <select id="modelInput" style="font-size: 1.1rem; padding: 3px">
+      <option value="gpt-3.5-turbo">GPT 3.5 turbo ($0.002 / 1K tokens) *</option>
+      <option value="text-ada-001">Ada ($0.0004 / 1K tokens)</option>
+      <option value="text-babbage-001">Babbage ($0.0005 / 1K tokens)</option>
+      <option value="text-curie-001">Curie ($0.0020 / 1K tokens)</option>
+      <option value="text-davinci-003">Davinci ($0.0200 / 1K tokens)</option>
+    </select>
+    <label class="label">Max tokens</label>
+    <input type="text" id="maxTokensInput" />
+    <label class="label">Temperature</label>
+    <input type="text" id="temperatureInput" />
+    <label class="label">What is your assistant</label>
+    <textarea id="systemPromptInput"></textarea>
+    <label style="display: flex; align-items: center;" title="In a thread, each session is a new session (ctrl + ;)">
+      Long conversation
+      <input id="multiConvInput" type="checkbox" style="width: 1.2rem; height: 1.2rem; margin-left: 10px;" />
+    </label>
+    <details id="promptDetails" style="margin: 20px 0;">
+      <summary>Assistant Public Prompts</summary>
+      <div id="promptList"></div>
+    </details>
+    <div style="display: flex; align-items: center; margin: 30px 0;">
+      <div style="flex: 1;"></div>
+      <button onclick="saveSettings()">Update</button>
+      <div style="flex: 1;"></div>
+      <a href="https://github.com/excing/chatgpt" target="_blank" style="padding: 10px 0;"><svg
+          class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1" width="32"
+          aria-hidden="true">
+          <path fill-rule="evenodd"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+          </path>
+        </svg></a>
+    </div>
+  </div>
+</div>
+<div id="historyModal" class="modal" style="display: none;">
+  <div id="history" class="model-body">
+    <div style="display: flex; align-items: center;">
+      <h2 style="display: inline-block">History</h2>
+      <div style="flex: 1;"></div>
+      <input style="width: auto; font-size: 1.5rem;" onclick="showHistory(false)" type="submit" title="Close (Esc)"
+        value="☕" />
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sse.js@0.6.1/lib/sse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+<script src="./app.js"></script>
+<!-- Google tag (gtag.js) -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=G-RBJJWTTD37'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  gtag('config', 'G-RBJJWTTD37');
+</script>
