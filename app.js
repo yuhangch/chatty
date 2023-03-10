@@ -108,12 +108,14 @@ function chat(reqMsgs) {
     }, (data) => {
         let msg = data.choices[0].delta || data.choices[0].message || {}
         assistantElem.className = 'assistant'
-        if (msg.content && msg.content !== '\n\n'){
+        if (msg.content && msg.content !== '\n\n') {
             assistantElem.innerText += msg.content
             message_container.scrollTop = message_container.scrollHeight
         }
     }, () => {
         let msg = assistantElem.innerText
+        assistantElem.innerHTML = marked.parse(msg)
+        hljs.highlightAll()
         saveConv({role: "assistant", content: msg})
         // textToSpeech(msg)
     })
